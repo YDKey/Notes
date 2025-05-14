@@ -87,21 +87,38 @@
 
         <main class="max-w-7xl mx-auto py-10 px-4 grid grid-cols-1 md:grid-cols-5 gap-6">
             <section class="col-span-1 bg-white rounded-2xl p-6 shadow-lg">
-                <h2 class="text-2xl font-semibold mb-4 text-purple-800">Calendar</h2>
+                <h2 class="text-2xl font-semibold mb-4 text-purple-800 border-b pb-2 border-yellow-400">Calendar</h2>
                 <input type="text" id="calendarInput" class="w-full p-2 border rounded-lg mb-4">
+                <ul id="noteDatesList" class="text-sm text-purple-700 space-y-2 overflow-y-auto max-h-[300px]"></ul>
             </section>
 
             <section class="col-span-3 bg-white rounded-2xl p-6 shadow-lg">
-                <h2 class="text-2xl font-semibold mb-4 text-purple-800">Daily Reflections</h2>
+                <h2 class="text-2xl font-semibold mb-4 text-purple-800 border-b pb-2 border-yellow-400">Daily Reflections</h2>
                 <div class="text-lg font-bold text-purple-700 mb-4" id="selectedDate">Select a date on the calendar</div>
                 <form id="notesForm" class="space-y-6">
-                    <textarea id="classNotes" class="w-full p-3 border rounded-lg" placeholder="Class Notes"></textarea>
-                    <textarea id="classSummary" class="w-full p-3 border rounded-lg" placeholder="Summary"></textarea>
-                    <textarea id="application" class="w-full p-3 border rounded-lg" placeholder="Application"></textarea>
-                    <textarea id="gratitude" class="w-full p-3 border rounded-lg" placeholder="Gratitude"></textarea>
+                    <div>
+                        <label for="classNotes" class="block font-medium text-purple-700"><i class="fas fa-book mr-2"></i>Class Notes</label>
+                        <textarea id="classNotes" class="w-full p-3 border rounded-lg min-h-[120px] focus:outline-none focus:ring-2 focus:ring-yellow-400" placeholder="Write your class notes here..."></textarea>
+                    </div>
+                    <div>
+                        <label for="classSummary" class="block font-medium text-purple-700"><i class="fas fa-compress-alt mr-2"></i>Summary</label>
+                        <textarea id="classSummary" class="w-full p-3 border rounded-lg min-h-[120px] focus:outline-none focus:ring-2 focus:ring-yellow-400" placeholder="Summarize the key points..."></textarea>
+                    </div>
+                    <div>
+                        <label for="application" class="block font-medium text-purple-700"><i class="fas fa-hands-helping mr-2"></i>Application</label>
+                        <textarea id="application" class="w-full p-3 border rounded-lg min-h-[120px] focus:outline-none focus:ring-2 focus:ring-yellow-400" placeholder="How will you apply these teachings?"></textarea>
+                    </div>
+                    <div>
+                        <label for="gratitude" class="block font-medium text-purple-700"><i class="fas fa-pray mr-2"></i>Gratitude</label>
+                        <textarea id="gratitude" class="w-full p-3 border rounded-lg min-h-[120px] focus:outline-none focus:ring-2 focus:ring-yellow-400" placeholder="Express your gratitude..."></textarea>
+                    </div>
                     <div class="flex flex-col md:flex-row gap-4 justify-end">
-                        <button type="button" id="downloadBtn" class="bg-purple-800 text-white px-6 py-2 rounded hover:opacity-90">Download Notes</button>
-                        <button type="button" id="saveBtn" class="bg-yellow-400 text-white px-6 py-2 rounded hover:opacity-90">Save Notes</button>
+                        <button type="button" id="downloadBtn" class="bg-purple-800 text-white py-2 px-6 rounded-lg hover:opacity-90">
+                            <i class="fas fa-download mr-2"></i>Download Notes
+                        </button>
+                        <button type="button" id="saveBtn" class="bg-yellow-400 text-white py-2 px-6 rounded-lg hover:opacity-90">
+                            <i class="fas fa-save mr-2"></i>Save Notes
+                        </button>
                     </div>
                 </form>
                 <p class="mt-6 text-center text-pink-700 italic text-lg">
@@ -381,6 +398,7 @@
                 logoutButtonElement.classList.add('block');
             }
             loadOldNotes();
+            updateNoteList();
         }
 
         function showAuthScreen() {
