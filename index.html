@@ -402,8 +402,8 @@
                 callback: (resp) => {
                     if (resp.access_token) {
                         accessToken = resp.access_token;
-                        currentUser = "google"; // FIXED: Stable key
-                        localStorage.setItem("loggedInUser", currentUser);
+                        currentUser = "DriveUser"; // FIXED: Consistent key
+                        localStorage.setItem("loggedInUser", "DriveUser"); // FIXED: Save correct key
                         showMainApp();
                         loadNotes();
                     } else {
@@ -608,13 +608,11 @@
                 }
             });
 
-            // Initial auth state
-            if (currentUser) {
-                if (currentUser !== "Guest_Devotee") {
-                    showAuthScreen(); // Will re-login & fetch token
-                } else {
-                    showMainApp();
-                }
+            // ✅ FIX 2: CORRECTED INITIAL AUTH STATE
+            if (currentUser === "Guest_Devotee") {
+                showMainApp();
+            } else if (currentUser === "DriveUser") {
+                showAuthScreen(); // user must click Google once
             } else {
                 showAuthScreen();
             }
