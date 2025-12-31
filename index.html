@@ -237,10 +237,9 @@ let accessToken = null;
 let tokenClient = null;
 
 // ===== EMAILJS CONFIGURATION =====
-// TODO: Replace 'YOUR_USER_ID_HERE' with your actual EmailJS Public User ID
 const SERVICE_ID = 'service_6bj8xsc'; // Your EmailJS Service ID
 const TEMPLATE_ID = 'hare_krishna_notes'; // Your EmailJS Template ID
-const USER_ID = 'qbTULUKDm5oJXxiJT'; // Your EmailJS Public ID
+const USER_ID = 'qbTULUKDm5oJXxiJT'; // Your EmailJS Public User ID
 
 // ===== EMAIL NOTES FUNCTION =====
 async function sendNotesByEmail() {
@@ -277,15 +276,19 @@ async function sendNotesByEmail() {
     };
 
     try {
+        console.log("Attempting to initialize EmailJS with User ID:", USER_ID); // Debug log
         // Initialize EmailJS with your credentials
         emailjs.init(USER_ID);
+        console.log("EmailJS initialized successfully"); // Debug log
 
         // Send the email
+        console.log("Sending email with params:", templateParams); // Debug log
         const response = await emailjs.send(
             SERVICE_ID,
             TEMPLATE_ID,
             templateParams
         );
+        console.log("EmailJS response:", response); // Debug log
 
         if (response.status === 200) {
             alert(`Note for ${date} sent successfully to ${toEmail}!`);
@@ -295,8 +298,8 @@ async function sendNotesByEmail() {
             throw new Error(`EmailJS returned status: ${response.status}`);
         }
     } catch (error) {
-        console.error('Error sending email:', error);
-        alert(`Failed to send email. Please try again later. Error: ${error.message}`);
+        console.error('Error sending email:', error); // This will show in the console
+        alert(`Failed to send email. Please check the browser console for details. Error: ${error.message || error}`);
     }
 }
 
