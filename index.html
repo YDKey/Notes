@@ -118,7 +118,8 @@
                 <p class="mb-6 text-gray-600">Please sign in to save and access your notes.</p>
                 
                 <!-- REPLACED Google Sign-In Button -->
-                <button id="googleLoginBtn" 
+                <button id="googleLoginBtn"
+                    onclick="startGoogleLogin()"
                     class="w-full bg-white border border-gray-300 py-2 px-4 rounded shadow flex items-center justify-center mb-4">
                     <img src="https://developers.google.com/identity/images/g-logo.png" class="w-5 h-5 mr-2">
                     Sign in with Google
@@ -396,36 +397,6 @@
             }
         }
 
-        // --- CORRECTED Auth Functions ---
-        function initAuth() {
-            tokenClient = google.accounts.oauth2.initTokenClient({
-                client_id: "1033459837624-4gtmoov6rlf822oemmrqrsjgmtj7dadj.apps.googleusercontent.com",
-                scope: "https://www.googleapis.com/auth/drive.appdata",
-                prompt: "consent", // 🔥 FORCES CONSENT SCREEN
-                callback: (resp) => {
-                    if (resp.access_token) {
-                        accessToken = resp.access_token;
-                        currentUser = "DriveUser"; // FIXED: Consistent key
-                        localStorage.setItem("loggedInUser", "DriveUser"); // FIXED: Save correct key
-                        showMainApp();
-                        loadNotes();
-                    } else {
-                        document.getElementById("authMsg").innerText = "Authorization failed.";
-                    }
-                }
-            });
-        }
-
-        // ✅ FIX 1: Handle library not ready
-        function handleGoogleLogin() {
-            if (!tokenClient) {
-                document.getElementById("authMsg").innerText =
-                    "Google services are still loading. Please wait 2 seconds and try again.";
-                return;
-            }
-            tokenClient.requestAccessToken();
-        }
-
         function handleGuestLogin() {
             currentUser = "Guest_Devotee";
             localStorage.setItem("loggedInUser", currentUser);
@@ -568,7 +539,6 @@
             updateClock();
 
             // Event Listeners
-            document.getElementById('googleLoginBtn').addEventListener('click', handleGoogleLogin); // NEW: Google login button
             document.getElementById('guestLoginBtn').addEventListener('click', handleGuestLogin);
             
             document.getElementById('logoutBtn').addEventListener('click', () => {
@@ -620,644 +590,51 @@
                 showAuthScreen();
             }
         });
-
-        // NEW: Google Library Load
-        function onGoogleLibraryLoad() {
-            initAuth();
-        }
     </script>
 
-    <script src="https://accounts.google.com/gsi/client" async defer onload="onGoogleLibraryLoad()"></script>
-</body>
-</html><!DOCTYPE html>
-<html lang="en">
-<head>
-    <!-- Your existing head content remains the same -->
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hare Krishna Class Notes</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Satisfy&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    <style>
-        /* Your existing styles remain the same */
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/6/6b/Srila_Prabhupada_Alachua_1977.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-        }
-        .bg-overlay {
-            background-color: rgba(255, 255, 255, 0.9);
-        }
-        .note-item:hover {
-            background-color: rgba(247, 223, 165, 0.3);
-        }
-        .hidden {
-            display: none !important;
-        }
-        .block {
-            display: block;
-        }
-        .flex {
-            display: flex;
-        }
-        .context-menu {
-            position: absolute;
-            background-color: white;
-            border: 1px solid #ccc;
-            padding: 5px 0;
-            z-index: 1000;
-            display: none;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-        }
+    <!-- REMOVED onload attribute -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-        .context-menu ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .context-menu li {
-            padding: 8px 15px;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
-        .context-menu li:hover {
-            background-color: #f0f0f0;
-        }
-
-        .card {
-            border-radius: 12px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px solid rgba(224, 231, 255, 0.7);
-        }
-
-        .card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 20px -3px rgba(0, 0, 0, 0.15), 0 6px 10px -2px rgba(0, 0, 0, 0.1);
-        }
-
-        .form-input {
-            transition: all 0.3s ease;
-            border: 1px solid #e5e7eb;
-        }
-
-        .form-input:focus {
-            border-color: #DDA0DD;
-            box-shadow: 0 0 0 3px rgba(221, 160, 221, 0.2);
-            outline: none;
-        }
-
-        .btn {
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            border-radius: 8px;
-            font-weight: 500;
-        }
-
-        .lotus-divider {
-            height: 30px;
-            background-image: url('image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 10"><path d="M0,5 C30,15 70,-5 100,5" fill="none" stroke="%23E9D5FF" stroke-width="2"/></svg>');
-            background-repeat: repeat-x;
-            background-position: center;
-            margin: 20px 0;
-        }
-
-        .mantra-text {
-            background: linear-gradient(135deg, #9333ea, #ec4899);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-            font-family: 'Satisfy', cursive;
-        }
-    </style>
-</head>
-<body class="min-h-screen text-gray-800">
-    <div class="bg-overlay min-h-screen">
-        <div id="authScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75" style="display: flex;">
-            <div class="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center">
-                <h2 class="text-2xl font-bold text-purple-800 mb-4">Hare Krishna Class Notes</h2>
-                <p class="mb-6 text-gray-600">Please sign in to save and access your notes.</p>
-                
-                <!-- REPLACED Google Sign-In Button -->
-                <button id="googleLoginBtn" 
-                    class="w-full bg-white border border-gray-300 py-2 px-4 rounded shadow flex items-center justify-center mb-4">
-                    <img src="https://developers.google.com/identity/images/g-logo.png" class="w-5 h-5 mr-2">
-                    Sign in with Google
-                </button>
-                
-                <div class="relative flex py-2 items-center">
-                    <div class="flex-grow border-t border-gray-300"></div>
-                    <span class="flex-shrink-0 mx-4 text-gray-400">OR</span>
-                    <div class="flex-grow border-t border-gray-300"></div>
-                </div>
-
-                <button id="guestLoginBtn" class="w-full mt-4 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow">
-                    Continue as Guest
-                </button>
-                
-                <p id="authMsg" class="text-red-600 mt-3 text-center text-sm"></p>
-            </div>
-        </div>
-
-        <header class="text-white text-center py-5 bg-gradient-to-r from-yellow-400 via-orange-500 to-purple-700 shadow-xl">
-            <h1 class="text-4xl md:text-5xl font-bold">Hare Krishna Class Notes</h1>
-            <p class="text-lg mt-1">Capture your spiritual learnings and reflections</p>
-            <div class="flex justify-center items-center mt-2">
-                <div id="clock" class="text-xl mr-4"></div>
-                <span id="loggedInUser" class="text-yellow-300 italic font-medium"></span>
-                <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm ml-4 hidden">Logout</button>
-            </div>
-        </header>
-
-        <main class="max-w-7xl mx-auto py-10 px-4 grid grid-cols-1 md:grid-cols-5 gap-6">
-            <section class="col-span-1 bg-white rounded-2xl p-6 shadow-lg card">
-                <h2 class="text-2xl font-semibold mb-4 text-purple-800 border-b pb-2 border-yellow-400">Calendar</h2>
-                <input type="text" id="calendarInput" class="w-full p-2 border rounded-lg mb-4 form-input" placeholder="Select Date">
-            </section>
-
-            <section class="col-span-3 bg-white rounded-2xl p-6 shadow-lg card">
-                <h2 class="text-2xl font-semibold mb-4 text-purple-800 border-b pb-2 border-yellow-400">Daily Reflections</h2>
-                <div class="text-lg font-bold text-purple-700 mb-4" id="selectedDate">Select a date on the calendar</div>
-                <form id="notesForm" class="space-y-6">
-                    <div class="transition-all duration-300 hover:shadow-md rounded-lg p-3 bg-purple-50">
-                        <label for="classNotes" class="block font-medium text-purple-700 mb-2 flex items-center">
-                            <i class="fas fa-book text-purple-500 mr-2"></i>
-                            <span>Class Notes</span>
-                        </label>
-                        <textarea id="classNotes" class="w-full p-3 border rounded-lg min-h-[120px] form-input bg-white" placeholder="Write your class notes here..."></textarea>
-                    </div>
-
-                    <div class="transition-all duration-300 hover:shadow-md rounded-lg p-3 bg-purple-50">
-                        <label for="classSummary" class="block font-medium text-purple-700 mb-2 flex items-center">
-                            <i class="fas fa-compress-alt text-purple-500 mr-2"></i>
-                            <span>Summary</span>
-                        </label>
-                        <textarea id="classSummary" class="w-full p-3 border rounded-lg min-h-[120px] form-input bg-white" placeholder="Summarize the key points..."></textarea>
-                    </div>
-
-                    <div class="transition-all duration-300 hover:shadow-md rounded-lg p-3 bg-purple-50">
-                        <label for="application" class="block font-medium text-purple-700 mb-2 flex items-center">
-                            <i class="fas fa-hands-helping text-purple-500 mr-2"></i>
-                            <span>Application</span>
-                        </label>
-                        <textarea id="application" class="w-full p-3 border rounded-lg min-h-[120px] form-input bg-white" placeholder="How will you apply these teachings?"></textarea>
-                    </div>
-
-                    <div class="transition-all duration-300 hover:shadow-md rounded-lg p-3 bg-purple-50">
-                        <label for="gratitude" class="block font-medium text-purple-700 mb-2 flex items-center">
-                            <i class="fas fa-pray text-purple-500 mr-2"></i>
-                            <span>Gratitude</span>
-                        </label>
-                        <textarea id="gratitude" class="w-full p-3 border rounded-lg min-h-[120px] form-input bg-white" placeholder="Express your gratitude..."></textarea>
-                    </div>
-
-                    <div class="flex flex-col md:flex-row gap-4 justify-end mt-6">
-                        <button type="button" id="downloadBtn" class="btn bg-gradient-to-r from-purple-800 to-purple-600 text-white py-3 px-6 rounded-lg hover:opacity-90 flex items-center justify-center">
-                            <i class="fas fa-download mr-2"></i>Download Notes
-                        </button>
-                        <button type="button" id="saveBtn" class="btn bg-gradient-to-r from-yellow-500 to-yellow-400 text-white py-3 px-6 rounded-lg hover:opacity-90 flex items-center justify-center">
-                            <i class="fas fa-save mr-2"></i>Save Notes
-                        </button>
-                    </div>
-                </form>
-
-                <div class="mt-8 text-center">
-                    <div class="lotus-divider"></div>
-                    <p class="mantra-text text-2xl py-2">
-                        Hare Krishna Hare Krishna, Krishna Krishna Hare Hare,<br>
-                        Hare Rama Hare Rama, Rama Rama Hare Hare
-                    </p>
-                </div>
-            </section>
-
-            <section class="col-span-1 bg-white rounded-2xl p-6 shadow-lg overflow-y-auto max-h-[600px]">
-                <h2 class="text-2xl font-semibold mb-4 text-purple-800">Old Notes</h2>
-                <div id="oldNotesContainer" class="space-y-3"></div>
-                <div id="noteContextMenu" class="context-menu">
-                    <ul>
-                        <li id="deleteNoteOption" class="text-red-600"><i class="fas fa-trash-alt mr-2"></i>Delete Note</li>
-                    </ul>
-                </div>
-            </section>
-        </main>
-
-        <footer class="bg-purple-800 text-white text-center py-6">
-            <p>&copy; <span id="currentYear"></span> Hare Krishna Class Notes - Kanjaksha Dasa | All Rights Reserved</p>
-        </footer>
-    </div>
-
+    <!-- NEW: Guaranteed initialization script -->
     <script>
-        let currentUser = localStorage.getItem('loggedInUser');
-        let accessToken = null;
-        let tokenClient = null; // NEW: OAuth2 client
+        let googleReady = false;
 
-        // --- CORRECTED Google Drive Functions ---
-        function buildMultipartBody(metadata, content) {
-            const boundary = '-------314159265358979323846';
-            const delimiter = "\r\n--" + boundary + "\r\n";
-            const close_delim = "\r\n--" + boundary + "--";
+        window.addEventListener("load", () => {
+            const waitForGoogle = setInterval(() => {
+                if (window.google && google.accounts && google.accounts.oauth2) {
+                    clearInterval(waitForGoogle);
 
-            const body = delimiter +
-                'Content-Type: application/json\r\n\r\n' +
-                JSON.stringify(metadata) +
-                delimiter +
-                'Content-Type: application/json\r\n\r\n' +
-                content +
-                close_delim;
-
-            return body;
-        }
-
-        async function initializeDrive() {
-            if (!accessToken) return null;
-
-            try {
-                // ✅ FIXED: Add spaces=appDataFolder parameter
-                const searchUrl = new URL('https://www.googleapis.com/drive/v3/files');
-                searchUrl.searchParams.append('q', `'appDataFolder' in parents and name='notes.json' and trashed=false`);
-                searchUrl.searchParams.append('spaces', 'appDataFolder'); // ✅ ADD THIS
-                searchUrl.searchParams.append('fields', 'files(id, name)');
-
-                const searchResult = await fetch(searchUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`
-                    }
-                });
-
-                if (!searchResult.ok) {
-                    const errorText = await searchResult.text();
-                    throw new Error(`Search failed: ${searchResult.status} ${searchResult.statusText} — ${errorText}`);
-                }
-
-                const searchJson = await searchResult.json();
-
-                if (searchJson.files.length > 0) {
-                    return searchJson.files[0].id;
-                } else {
-                    // Create new file in appDataFolder - already correct
-                    const metadata = {
-                        name: 'notes.json',
-                        parents: ['appDataFolder']
-                    };
-
-                    const body = buildMultipartBody(metadata, JSON.stringify({}));
-
-                    const createResponse = await fetch(
-                        'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
-                        {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': `Bearer ${accessToken}`,
-                                'Content-Type': `multipart/related; boundary="-------314159265358979323846"`
-                            },
-                            body: body
+                    tokenClient = google.accounts.oauth2.initTokenClient({
+                        client_id: "1033459837624-4gtmoov6rlf822oemmrqrsjgmtj7dadj.apps.googleusercontent.com",
+                        scope: "https://www.googleapis.com/auth/drive.appdata",
+                        prompt: "consent",
+                        callback: (resp) => {
+                            if (resp.access_token) {
+                                accessToken = resp.access_token;
+                                currentUser = "DriveUser";
+                                localStorage.setItem("loggedInUser", "DriveUser");
+                                showMainApp();
+                                loadNotes();
+                            } else {
+                                document.getElementById("authMsg").innerText = "Google authorization failed.";
+                            }
                         }
-                    );
+                    });
 
-                    if (!createResponse.ok) {
-                        const errorText = await createResponse.text();
-                        throw new Error(`File creation failed: ${createResponse.status} ${createResponse.statusText} — ${errorText}`);
-                    }
-
-                    const createJson = await createResponse.json();
-                    return createJson.id;
+                    googleReady = true;
+                    console.log("✅ Google OAuth ready");
                 }
-            } catch (error) {
-                console.error('Error initializing Drive:', error);
-                document.getElementById('authMsg').innerText = "Drive initialization failed: " + (error.message || "Unknown error");
-                return null;
-            }
-        }
+            }, 300);
+        });
 
-        async function saveNotesToDrive(notes) {
-            if (!accessToken) return;
-            
-            try {
-                const fileId = await initializeDrive();
-                if (!fileId) return;
-                
-                const updateResponse = await fetch(
-                    `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`,
-                    {
-                        method: 'PATCH',
-                        headers: {
-                            'Authorization': `Bearer ${accessToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(notes)
-                    }
-                );
-                
-                if (!updateResponse.ok) {
-                    const errorText = await updateResponse.text();
-                    throw new Error(`Save failed: ${updateResponse.status} — ${errorText}`);
-                }
-            } catch (error) {
-                console.error('Error saving to Drive:', error);
-                document.getElementById('authMsg').innerText = "Error saving to Drive. Using local storage as backup.";
-            }
-        }
-
-        async function loadNotesFromDrive() {
-            if (!accessToken) return {};
-
-            try {
-                // ✅ FIXED: Add spaces=appDataFolder parameter for loading too
-                const searchUrl = new URL('https://www.googleapis.com/drive/v3/files');
-                searchUrl.searchParams.append('q', `'appDataFolder' in parents and name='notes.json' and trashed=false`);
-                searchUrl.searchParams.append('spaces', 'appDataFolder'); // ✅ ADD THIS
-                searchUrl.searchParams.append('fields', 'files(id, name)');
-
-                const searchResult = await fetch(searchUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`
-                    }
-                });
-
-                if (!searchResult.ok) {
-                    console.warn('Drive search failed (maybe first run?) — assuming empty notes.');
-                    return {};
-                }
-
-                const searchJson = await searchResult.json();
-
-                if (searchJson.files.length === 0) {
-                    return {};
-                }
-
-                const fileId = searchJson.files[0].id;
-                const contentResponse = await fetch(
-                    `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
-                    {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${accessToken}`
-                        }
-                    }
-                );
-
-                if (!contentResponse.ok) {
-                    console.error('Failed to fetch file content:', contentResponse.status);
-                    return {};
-                }
-
-                const content = await contentResponse.text();
-                try {
-                    return JSON.parse(content || '{}');
-                } catch (e) {
-                    console.error('Invalid JSON in notes file:', content);
-                    return {};
-                }
-            } catch (error) {
-                console.error('Error loading from Drive:', error);
-                alert("Failed to load notes from Google Drive. Falling back to local drafts.");
-                return {};
-            }
-        }
-
-        // --- CORRECTED Auth Functions ---
-        function initAuth() {
-            tokenClient = google.accounts.oauth2.initTokenClient({
-                client_id: "1033459837624-4gtmoov6rlf822oemmrqrsjgmtj7dadj.apps.googleusercontent.com",
-                scope: "https://www.googleapis.com/auth/drive.appdata",
-                prompt: "consent", // 🔥 FORCES CONSENT SCREEN
-                callback: (resp) => {
-                    if (resp.access_token) {
-                        accessToken = resp.access_token;
-                        currentUser = "DriveUser"; // FIXED: Consistent key
-                        localStorage.setItem("loggedInUser", "DriveUser"); // FIXED: Save correct key
-                        showMainApp();
-                        loadNotes();
-                    } else {
-                        document.getElementById("authMsg").innerText = "Authorization failed.";
-                    }
-                }
-            });
-        }
-
-        // ✅ FIX 1: Handle library not ready
-        function handleGoogleLogin() {
-            if (!tokenClient) {
+        function startGoogleLogin() {
+            if (!googleReady) {
                 document.getElementById("authMsg").innerText =
-                    "Google services are still loading. Please wait 2 seconds and try again.";
+                    "Google still initializing… please try again in 2 seconds.";
                 return;
             }
             tokenClient.requestAccessToken();
         }
-
-        function handleGuestLogin() {
-            currentUser = "Guest_Devotee";
-            localStorage.setItem("loggedInUser", currentUser);
-            showMainApp();
-        }
-
-        function showMainApp() {
-            document.getElementById('authScreen').classList.add('hidden');
-            document.getElementById('authScreen').style.display = 'none';
-            
-            const userDisplay = document.getElementById('loggedInUser');
-            if(userDisplay) {
-                userDisplay.textContent = "Hare Krishna 🙏"; // FIXED: Simple display
-            }
-            
-            document.getElementById('logoutBtn').classList.remove('hidden');
-            document.getElementById('logoutBtn').classList.add('block');
-            loadNotes();
-        }
-
-        function showAuthScreen() {
-            document.getElementById('authScreen').classList.remove('hidden');
-            document.getElementById('authScreen').style.display = 'flex';
-            
-            document.getElementById('loggedInUser').textContent = '';
-            document.getElementById('logoutBtn').classList.add('hidden');
-        }
-
-        // --- App Logic ---
-        const getNotes = async () => {
-            if (currentUser === "Guest_Devotee") {
-                try {
-                    const notesString = localStorage.getItem('hareKrishnaNotes_guest');
-                    return notesString ? JSON.parse(notesString) : {};
-                } catch (error) {
-                    console.error("Error reading localStorage notes:", error);
-                    return {};
-                }
-            }
-            return await loadNotesFromDrive();
-        };
-
-        const saveNotes = async (notes) => {
-            if (currentUser === "Guest_Devotee") {
-                try {
-                    localStorage.setItem('hareKrishnaNotes_guest', JSON.stringify(notes));
-                } catch(error) {
-                    console.error("Storage full or error", error);
-                    alert("Could not save note (Storage full or unavailable).");
-                }
-                return;
-            }
-            await saveNotesToDrive(notes);
-        };
-
-        const loadNote = async (date) => {
-            if (!currentUser) return;
-            
-            const notes = await getNotes();
-            const note = notes[date] || {};
-            
-            document.getElementById('classNotes').value = note.classNotes || '';
-            document.getElementById('classSummary').value = note.classSummary || '';
-            document.getElementById('application').value = note.application || '';
-            document.getElementById('gratitude').value = note.gratitude || '';
-        };
-
-        const saveCurrentNote = async () => {
-            if (!currentUser) { alert('Please log in.'); return; }
-            
-            const date = document.getElementById('calendarInput').value;
-            if (!date) { alert('Please select a date first.'); return; }
-
-            const notes = await getNotes();
-            notes[date] = {
-                classNotes: document.getElementById('classNotes').value,
-                classSummary: document.getElementById('classSummary').value,
-                application: document.getElementById('application').value,
-                gratitude: document.getElementById('gratitude').value
-            };
-            
-            await saveNotes(notes);
-            loadNotes();
-            
-            // Visual feedback
-            const saveBtn = document.getElementById('saveBtn');
-            const originalText = saveBtn.innerHTML;
-            saveBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Saved!';
-            setTimeout(() => saveBtn.innerHTML = originalText, 2000);
-        };
-
-        const loadNotes = async () => {
-            const container = document.getElementById('oldNotesContainer');
-            if (!currentUser) return;
-            
-            const notes = await getNotes();
-            container.innerHTML = '';
-            
-            if (Object.keys(notes).length === 0) {
-                container.innerHTML = '<p class="text-gray-500 italic text-sm">No notes found yet. Start writing!</p>';
-                return;
-            }
-
-            const sortedDates = Object.keys(notes).sort().reverse();
-            sortedDates.forEach(date => {
-                const noteItem = document.createElement('div');
-                noteItem.className = 'note-item p-2 rounded cursor-pointer border-l-4 border-purple-300 hover:border-purple-600 transition-all';
-                noteItem.innerHTML = `
-                    <div class="font-medium text-purple-900">${date}</div>
-                    <div class="text-xs text-gray-500 truncate">${notes[date].classSummary || 'No summary'}</div>
-                `;
-                
-                noteItem.onclick = () => {
-                    document.getElementById('calendarInput')._flatpickr.setDate(date);
-                    document.getElementById('selectedDate').textContent = `Notes for ${date}`;
-                    loadNote(date);
-                };
-
-                noteItem.addEventListener('contextmenu', (e) => {
-                    e.preventDefault();
-                    const menu = document.getElementById('noteContextMenu');
-                    menu.style.display = 'block';
-                    menu.style.left = `${e.pageX}px`;
-                    menu.style.top = `${e.pageY}px`;
-                    menu.dataset.targetDate = date;
-                });
-
-                container.appendChild(noteItem);
-            });
-        };
-
-        // --- Initialization ---
-        document.addEventListener('DOMContentLoaded', () => {
-            // Clock & year
-            const updateClock = () => {
-                document.getElementById('clock').textContent = new Date().toLocaleTimeString();
-                document.getElementById('currentYear').textContent = new Date().getFullYear();
-            };
-            setInterval(updateClock, 1000);
-            updateClock();
-
-            // Event Listeners
-            document.getElementById('googleLoginBtn').addEventListener('click', handleGoogleLogin); // NEW: Google login button
-            document.getElementById('guestLoginBtn').addEventListener('click', handleGuestLogin);
-            
-            document.getElementById('logoutBtn').addEventListener('click', () => {
-                localStorage.removeItem('loggedInUser');
-                currentUser = null;
-                accessToken = null;
-                showAuthScreen();
-            });
-
-            document.getElementById('saveBtn').addEventListener('click', saveCurrentNote);
-            
-            document.getElementById('downloadBtn').addEventListener('click', () => {
-                const date = document.getElementById('calendarInput').value || 'Draft';
-                const content = `DATE: ${date}\n\nCLASS NOTES:\n${document.getElementById('classNotes').value}\n\nSUMMARY:\n${document.getElementById('classSummary').value}\n\nAPPLICATION:\n${document.getElementById('application').value}\n\nGRATITUDE:\n${document.getElementById('gratitude').value}`;
-                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-                saveAs(blob, `KrishnaNotes_${date}.txt`);
-            });
-
-            // Context Menu
-            document.addEventListener('click', () => document.getElementById('noteContextMenu').style.display = 'none');
-            document.getElementById('deleteNoteOption').addEventListener('click', async () => {
-                const date = document.getElementById('noteContextMenu').dataset.targetDate;
-                if(date && confirm(`Delete note for ${date}?`)) {
-                    const notes = await getNotes();
-                    delete notes[date];
-                    await saveNotes(notes);
-                    loadNotes();
-                    if(document.getElementById('calendarInput').value === date) {
-                        document.getElementById('notesForm').reset();
-                    }
-                }
-            });
-
-            // Calendar
-            flatpickr("#calendarInput", {
-                dateFormat: "Y-m-d",
-                onChange: (selectedDates, dateStr) => {
-                    document.getElementById('selectedDate').textContent = `Notes for ${dateStr}`;
-                    loadNote(dateStr);
-                }
-            });
-
-            // ✅ FIX 2: CORRECTED INITIAL AUTH STATE
-            if (currentUser === "Guest_Devotee") {
-                showMainApp();
-            } else if (currentUser === "DriveUser") {
-                showAuthScreen(); // user must click Google once
-            } else {
-                showAuthScreen();
-            }
-        });
-
-        // NEW: Google Library Load
-        function onGoogleLibraryLoad() {
-            initAuth();
-        }
     </script>
-
-    <script src="https://accounts.google.com/gsi/client" async defer onload="onGoogleLibraryLoad()"></script>
 </body>
 </html>
