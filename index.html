@@ -237,11 +237,12 @@ let accessToken = null;
 let tokenClient = null;
 
 // ===== EMAILJS CONFIGURATION =====
+// TODO: Replace 'YOUR_USER_ID_HERE' with your actual EmailJS Public User ID
 const SERVICE_ID = 'service_6bj8xsc'; // Your EmailJS Service ID
 const TEMPLATE_ID = 'hare_krishna_notes'; // Your EmailJS Template ID
-const USER_ID = 'qbTULUKDm5oJXxiJT'; // Your EmailJS Public User ID
+const USER_ID = 'qbTULUKDm5oJXxiJT'; // Your EmailJS Public ID
 
-// ===== EMAIL NOTES FUNCTION =====
+// ===== EMAIL NOTES FUNCTION (IMPROVED ERROR HANDLING) =====
 async function sendNotesByEmail() {
     const toEmail = document.getElementById('emailAddress').value.trim();
     if (!toEmail) {
@@ -295,14 +296,35 @@ async function sendNotesByEmail() {
             // Optional: Clear the input field
             document.getElementById('emailAddress').value = '';
         } else {
-            throw new Error(`EmailJS returned status: ${response.status}`);
+            // Use response.text if available, otherwise use status
+            const errorMessage = response.text || `EmailJS returned status: ${response.status}`;
+            throw new Error(errorMessage);
         }
     } catch (error) {
-        console.error('Error sending email:', error); // This will show in the console
-        alert(`Failed to send email. Please check the browser console for details. Error: ${error.message || error}`);
+        console.error('Full error object:', error); // Log the entire error object
+        // Try to get a more specific message
+        let errorMessage = "An unknown error occurred.";
+        if (error && typeof error === 'object') {
+            if (error.text) {
+                // EmailJS might return an error object with a 'text' property
+                errorMessage = `EmailJS Error: ${error.text}`;
+            } else if (error.status) {
+                errorMessage = `EmailJS Error: Status ${error.status}`;
+            } else if (error.message) {
+                errorMessage = `Error: ${error.message}`;
+            } else {
+                // If it's just an object, try to stringify it
+                errorMessage = `Error: ${JSON.stringify(error)}`;
+            }
+        } else {
+            // If it's not an object, use it directly
+            errorMessage = `Error: ${error}`;
+        }
+
+        console.error('Error sending email:', errorMessage); // Log the formatted message
+        alert(`Failed to send email. Please check the browser console for details. Details: ${errorMessage}`);
     }
 }
-
 // ===== GOOGLE DRIVE FUNCTIONS (CORRECTED) =====
 function buildMultipartBody(metadata, content) {
     const boundary = '-------314159265358979323846';
